@@ -4,14 +4,14 @@ import (
 	"bufio"
 	"flag"
 	"fmt"
+	"log"
 	"os"
 	"strings"
 )
 
 func CheckErr(e error) {
 	if e != nil {
-		fmt.Println("Error: ", e)
-		//return
+		log.Fatal("Error: ", e)
 	}
 }
 
@@ -25,7 +25,7 @@ func main() {
 
 	var arg string
 
-	if !*readBytes && !*readLines && !*readWords {
+	if !*readBytes && !*readLines && !*readWords && !*readCharacters {
 		arg = os.Args[1]
 	} else {
 		arg = os.Args[2]
@@ -38,43 +38,40 @@ func main() {
 	}
 
 	if *readBytes {
-		readBytesFunc(arg)
+		fmt.Println(readBytesFunc(arg), arg)
 	}
 
 	if *readLines {
-		readLinesFunc(arg)
+		fmt.Println(readLinesFunc(arg), arg)
 	}
 
 	if *readWords {
-		readWordsFunc(arg)
+		fmt.Println(readWordsFunc(arg), arg)
 	}
 
 	if *readCharacters {
-		_, err := readCharactersFunc(arg)
-		CheckErr(err)
+		fmt.Println(readCharactersFunc(arg), arg)
 	}
 
-	if !*readBytes && !*readLines && !*readWords {
-		readLinesFunc(arg)
-		readWordsFunc(arg)
-		readBytesFunc(arg)
+	if !*readBytes && !*readLines && !*readWords && !*readCharacters {
+		fmt.Printf("%v %v %v - %v\n", readLinesFunc(arg), readWordsFunc(arg), readBytesFunc(arg), arg)
 	}
 }
 
-func readCharactersFunc(arg string) (int, error) {
-	return fmt.Println(len(readFileToString(arg)), arg)
+func readCharactersFunc(arg string) int {
+	return len(readFileToString(arg))
 }
 
-func readBytesFunc(arg string) {
+func readBytesFunc(arg string) int64 {
 	file, err := os.Stat(arg)
 	CheckErr(err)
-	fmt.Println(file.Size(), arg)
+	return file.Size()
 }
 
-func readLinesFunc(arg string) bool {
+func readLinesFunc(arg string) int {
 	file, done := openFile(arg)
 	if done {
-		return true
+		return 0
 	}
 
 	defer func(file *os.File) {
@@ -93,18 +90,16 @@ func readLinesFunc(arg string) bool {
 
 	if err := scanner.Err(); err != nil {
 		fmt.Println("Error reading from file:", err)
-		return true
 	}
 
-	fmt.Println(lineCount, arg)
-	return false
+	return lineCount
 }
 
-func readWordsFunc(arg string) {
+func readWordsFunc(arg string) int {
 	fileStrings := readFileToString(arg)
 	fields := strings.Fields(fileStrings)
 
-	fmt.Println(len(fields), arg)
+	return len(fields)
 }
 
 func readFileToString(filePath string) string {
